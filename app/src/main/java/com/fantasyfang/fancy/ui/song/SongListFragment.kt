@@ -9,8 +9,12 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.fantasyfang.fancy.R
+import com.fantasyfang.fancy.data.Song
 import com.fantasyfang.fancy.di.InjectorUtils
+import kotlinx.android.synthetic.main.fragment_song_list.*
 
 private const val READ_EXTERNAL_STORAGE_REQUEST = 1
 
@@ -33,6 +37,18 @@ class SongListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val songAdapter = SongListAdapter {
+            clickSong(it)
+        }
+
+        with(songRecyclerView) {
+            layoutManager = LinearLayoutManager(activity)
+            adapter = songAdapter
+        }
+        songListViewModel.songs.observe(this.viewLifecycleOwner, Observer<List<Song>> { songs ->
+            songAdapter.submitList(songs)
+        })
+
         openMediaStore()
     }
 
@@ -78,4 +94,7 @@ class SongListFragment : Fragment() {
         songListViewModel.loadSongs()
     }
 
+    private fun clickSong(song: Song) {
+        //TODO: Play song
+    }
 }

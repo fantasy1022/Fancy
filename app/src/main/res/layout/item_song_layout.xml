@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/songLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground">
+
+    <ImageView
+        android:id="@+id/songCoverImage"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="7dp"
+        android:layout_marginBottom="7dp"
+        android:contentDescription="@string/cover"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@tools:sample/avatars" />
+
+    <TextView
+        android:id="@+id/songNameText"
+        style="@style/Song.MainText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/artistNameText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/songCoverImage"
+        app:layout_constraintTop_toTopOf="@+id/songCoverImage"
+        tools:text="@tools:sample/lorem" />
+
+    <TextView
+        android:id="@+id/artistNameText"
+        style="@style/Song.SecondaryText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@id/songCoverImage"
+        app:layout_constraintEnd_toEndOf="@id/songNameText"
+        app:layout_constraintStart_toEndOf="@id/songCoverImage"
+        app:layout_constraintStart_toStartOf="@id/songNameText"
+        app:layout_constraintTop_toBottomOf="@id/songNameText"
+        app:layout_goneMarginStart="0dp"
+        tools:text="@tools:sample/lorem" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
