@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.fantasyfang.fancy.R
+import com.fantasyfang.fancy.di.InjectorUtils
 
 private const val READ_EXTERNAL_STORAGE_REQUEST = 1
 
@@ -20,7 +21,9 @@ class SongListFragment : Fragment() {
         fun newInstance() = SongListFragment()
     }
 
-    private val songListViewModel: SongListViewModel by viewModels()
+    private val songListViewModel: SongListViewModel by viewModels() {
+        InjectorUtils.provideSongListViewModel(requireContext())
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -65,10 +68,6 @@ class SongListFragment : Fragment() {
         }
     }
 
-    private fun showSongs() {
-        //TODO: show song list
-    }
-
     private fun openMediaStore() {
         if (haveStoragePermission()) {
             showSongs()
@@ -76,4 +75,9 @@ class SongListFragment : Fragment() {
             requestPermission()
         }
     }
+
+    private fun showSongs() {
+        songListViewModel.loadSongs()
+    }
+
 }
