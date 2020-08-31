@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -60,8 +59,7 @@ class SongListFragment : Fragment() {
     private fun requestPermission() {
         if (!haveStoragePermission()) {
             val permissions = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-            ActivityCompat.requestPermissions(
-                requireActivity(),
+            requestPermissions(
                 permissions,
                 READ_EXTERNAL_STORAGE_REQUEST
             )
