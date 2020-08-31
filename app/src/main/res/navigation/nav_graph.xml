@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/SongListFragment">
+
+    <fragment
+        android:id="@+id/SongListFragment"
+        android:name="com.fantasyfang.fancy.ui.song.SongListFragment"
+        android:label="@string/song_list_fragment">
+    </fragment>
+</navigation>

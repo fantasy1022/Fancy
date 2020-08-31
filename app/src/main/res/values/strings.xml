@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Fancy</string>
+    <string name="song_list_fragment">SongList Fragment</string>
 </resources>
