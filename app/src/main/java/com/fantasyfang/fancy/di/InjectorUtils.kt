@@ -9,7 +9,7 @@ import com.fantasyfang.fancy.ui.song.SongListViewModel
  */
 object InjectorUtils {
 
-    private fun provideSongListRepository(context: Context) =
+    fun provideSongListRepository(context: Context) =
         SongListRepositoryImpl(context.contentResolver)
 
     fun provideSongListViewModel(context: Context): SongListViewModel.Factory {

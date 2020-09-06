@@ -59,6 +59,10 @@ dependencies {
     // Media
     implementation 'androidx.media:media:1.1.0'
 
+    // ExoPlayer
+    implementation 'com.google.android.exoplayer:extension-mediasession:2.11.8'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.11.8'
+
     // Test
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
