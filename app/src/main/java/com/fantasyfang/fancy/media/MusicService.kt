@@ -19,7 +19,8 @@ class MusicService : MediaBrowserServiceCompat() {
         clientUid: Int,
         rootHints: Bundle?
     ): BrowserRoot? {
-        return if (allowBrowsing(clientPackageName)) {
+        val isKnownCaller = allowBrowsing(clientPackageName)
+        return if (isKnownCaller) {
             BrowserRoot(FANCY_BROWSABLE_ROOT, null)
         } else {
             if (BuildConfig.DEBUG) {
