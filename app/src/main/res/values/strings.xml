@@ -3,4 +3,8 @@
     <string name="song_list_fragment">SongList Fragment</string>
 
     <string name="cover">cover</string>
+
+    <!-- Error messages -->
+    <string name="error_media_not_found">Could not locate requested media.</string>
+    <string name="generic_error">The application has encountered an unexpected error.</string>
 </resources>

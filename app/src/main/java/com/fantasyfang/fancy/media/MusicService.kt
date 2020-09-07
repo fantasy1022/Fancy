@@ -9,16 +9,26 @@ import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
+import android.widget.Toast
 import androidx.media.MediaBrowserServiceCompat
 import com.fantasyfang.fancy.BuildConfig
+import com.fantasyfang.fancy.R
 import com.fantasyfang.fancy.di.InjectorUtils
+import com.fantasyfang.fancy.extension.toMediaMetadataCompat
+import com.fantasyfang.fancy.extension.toMediaSource
 import com.fantasyfang.fancy.repository.SongListRepository
-import com.google.android.exoplayer2.ControlDispatcher
-import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.util.Util
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
-class MusicService : MediaBrowserServiceCompat() {
+class MusicService : MediaBrowserServiceCompat(), CoroutineScope by MainScope() {
 
     private val TAG = MusicService::class.java.simpleName
     private lateinit var mediaSession: MediaSessionCompat
@@ -26,6 +36,27 @@ class MusicService : MediaBrowserServiceCompat() {
     private lateinit var songListRepository: SongListRepository
 
     private var currentPlaylistItems: List<MediaMetadataCompat> = emptyList()
+
+    private lateinit var currentPlayer: Player
+
+    private val exoPlayer: ExoPlayer by lazy {
+        SimpleExoPlayer.Builder(this).build().apply {
+            setAudioAttributes(musicAudioAttributes, true)
+            setHandleAudioBecomingNoisy(true)
+            addListener(playerListener)
+        }
+    }
+
+    private val playerListener = PlayerEventListener()
+
+    private val musicAudioAttributes = AudioAttributes.Builder()
+        .setContentType(C.CONTENT_TYPE_MUSIC)
+        .setUsage(C.USAGE_MEDIA)
+        .build()
+
+    private val dataSourceFactory: DefaultDataSourceFactory by lazy {
+        DefaultDataSourceFactory(this, Util.getUserAgent(this, MUSIC_USER_AGENT), null)
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -46,6 +77,8 @@ class MusicService : MediaBrowserServiceCompat() {
         mediaSessionConnector = MediaSessionConnector(mediaSession)
         mediaSessionConnector.setPlaybackPreparer(MusicPlaybackPreparer())
         mediaSessionConnector.setQueueNavigator(MusicQueueNavigator(mediaSession))
+
+        switchToPlayer(previousPlayer = null, newPlayer = exoPlayer)
     }
 
     override fun onLoadChildren(
@@ -97,8 +130,24 @@ class MusicService : MediaBrowserServiceCompat() {
             mediaId: String, playWhenReady: Boolean,
             extras: Bundle?
         ) {
-            //TODO: 1.Get song from SongListRepository by using mediaId
-            //TODO: 2.Use exoplayer to play song.
+            launch {
+                val itemToPlay = songListRepository.getSongs().find { item ->
+                    item.id.toString() == mediaId
+                }?.toMediaMetadataCompat()
+
+                val playlist = songListRepository.getSongs().toMediaMetadataCompat()
+
+                if (itemToPlay == null) {
+                    Log.w(TAG, "Content not found: MediaID=$mediaId")
+                } else {
+                    preparePlaylist(
+                        playlist,
+                        itemToPlay,
+                        playWhenReady,
+                        0
+                    )
+                }
+            }
         }
 
         override fun onPrepareFromUri(uri: Uri, playWhenReady: Boolean, extras: Bundle?) = Unit
@@ -112,7 +161,93 @@ class MusicService : MediaBrowserServiceCompat() {
         override fun getMediaDescription(player: Player, windowIndex: Int): MediaDescriptionCompat =
             currentPlaylistItems[windowIndex].description
     }
+
+    private inner class PlayerEventListener : Player.EventListener {
+        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+            when (playbackState) {
+                Player.STATE_BUFFERING,
+                Player.STATE_READY -> {
+                    //TODO: show notification
+                }
+                else -> {
+                    //TODO: hide notification
+                }
+            }
+        }
+
+        override fun onPlayerError(error: ExoPlaybackException) {
+            var message = R.string.generic_error
+            when (error.type) {
+                // If the data from MediaSource object could not be loaded the Exoplayer raises
+                // a type_source error.
+                // An error message is printed to UI via Toast message to inform the user.
+                ExoPlaybackException.TYPE_SOURCE -> {
+                    message = R.string.error_media_not_found
+                    Log.e(TAG, "TYPE_SOURCE: " + error.sourceException.message)
+                }
+                // If the error occurs in a render component, Exoplayer raises a type_remote error.
+                ExoPlaybackException.TYPE_RENDERER -> {
+                    Log.e(TAG, "TYPE_RENDERER: " + error.rendererException.message)
+                }
+                // If occurs an unexpected RuntimeException Exoplayer raises a type_unexpected error.
+                ExoPlaybackException.TYPE_UNEXPECTED -> {
+                    Log.e(TAG, "TYPE_UNEXPECTED: " + error.unexpectedException.message)
+                }
+                // Occurs when there is a OutOfMemory error.
+                ExoPlaybackException.TYPE_OUT_OF_MEMORY -> {
+                    Log.e(TAG, "TYPE_OUT_OF_MEMORY: " + error.outOfMemoryError.message)
+                }
+                // If the error occurs in a remote component, Exoplayer raises a type_remote error.
+                ExoPlaybackException.TYPE_REMOTE -> {
+                    Log.e(TAG, "TYPE_REMOTE: " + error.message)
+                }
+            }
+            Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun switchToPlayer(previousPlayer: Player?, newPlayer: Player) {
+        if (previousPlayer == newPlayer) {
+            return
+        }
+        currentPlayer = newPlayer
+        if (previousPlayer != null) {
+            val playbackState = previousPlayer.playbackState
+            if (currentPlaylistItems.isEmpty()) {
+                // We are joining a playback session. Loading the session from the new player is
+                // not supported, so we stop playback.
+                currentPlayer.stop(/* reset= */true)
+            } else if (playbackState != Player.STATE_IDLE && playbackState != Player.STATE_ENDED) {
+                preparePlaylist(
+                    metadataList = currentPlaylistItems,
+                    itemToPlay = currentPlaylistItems[previousPlayer.currentWindowIndex],
+                    playWhenReady = previousPlayer.playWhenReady,
+                    playbackStartPositionMs = previousPlayer.currentPosition
+                )
+            }
+        }
+        mediaSessionConnector.setPlayer(newPlayer)
+        previousPlayer?.stop(/* reset= */true)
+    }
+
+    private fun preparePlaylist(
+        metadataList: List<MediaMetadataCompat>,
+        itemToPlay: MediaMetadataCompat?, playWhenReady: Boolean,
+        playbackStartPositionMs: Long
+    ) {
+        val initialWindowIndex = if (itemToPlay == null) 0 else metadataList.indexOf(itemToPlay)
+        currentPlaylistItems = metadataList
+
+        currentPlayer.playWhenReady = playWhenReady
+        currentPlayer.stop(/* reset= */ true)
+        if (currentPlayer == exoPlayer) {
+            val mediaSource = metadataList.toMediaSource(dataSourceFactory)
+            exoPlayer.prepare(mediaSource)
+            exoPlayer.seekTo(initialWindowIndex, playbackStartPositionMs)
+        }
+    }
 }
 
 const val FANCY_BROWSABLE_ROOT = "/"
 const val FANCY_EMPTY_ROOT = "@empty@"
+private const val MUSIC_USER_AGENT = "music.agent"
