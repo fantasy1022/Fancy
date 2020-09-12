@@ -1,6 +1,8 @@
 package com.fantasyfang.fancy.media
 
+import android.app.Notification
 import android.app.PendingIntent
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.ResultReceiver
@@ -11,6 +13,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.media.MediaBrowserServiceCompat
 import com.fantasyfang.fancy.BuildConfig
 import com.fantasyfang.fancy.R
@@ -22,11 +25,13 @@ import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
+import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+
 
 class MusicService : MediaBrowserServiceCompat(), CoroutineScope by MainScope() {
 
@@ -34,8 +39,10 @@ class MusicService : MediaBrowserServiceCompat(), CoroutineScope by MainScope() 
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var mediaSessionConnector: MediaSessionConnector
     private lateinit var songListRepository: SongListRepository
+    private lateinit var notificationManager: MusicNotificationManager
 
     private var currentPlaylistItems: List<MediaMetadataCompat> = emptyList()
+    private var isForegroundService = false
 
     private lateinit var currentPlayer: Player
 
@@ -79,6 +86,14 @@ class MusicService : MediaBrowserServiceCompat(), CoroutineScope by MainScope() 
         mediaSessionConnector.setQueueNavigator(MusicQueueNavigator(mediaSession))
 
         switchToPlayer(previousPlayer = null, newPlayer = exoPlayer)
+
+        notificationManager = MusicNotificationManager(
+            this,
+            mediaSession.sessionToken,
+            PlayerNotificationListener()
+        )
+
+        notificationManager.showNotificationForPlayer(currentPlayer)
     }
 
     override fun onLoadChildren(
@@ -167,10 +182,16 @@ class MusicService : MediaBrowserServiceCompat(), CoroutineScope by MainScope() 
             when (playbackState) {
                 Player.STATE_BUFFERING,
                 Player.STATE_READY -> {
-                    //TODO: show notification
+                    notificationManager.showNotificationForPlayer(currentPlayer)
+                    // If playback is paused we remove the foreground state which allows the
+                    // notification to be dismissed. An alternative would be to provide a "close"
+                    // button in the notification which stops playback and clears the notification.
+                    if (playbackState == Player.STATE_READY) {
+                        if (!playWhenReady) stopForeground(false)
+                    }
                 }
                 else -> {
-                    //TODO: hide notification
+                    notificationManager.hideNotification()
                 }
             }
         }
@@ -244,6 +265,31 @@ class MusicService : MediaBrowserServiceCompat(), CoroutineScope by MainScope() 
             val mediaSource = metadataList.toMediaSource(dataSourceFactory)
             exoPlayer.prepare(mediaSource)
             exoPlayer.seekTo(initialWindowIndex, playbackStartPositionMs)
+        }
+    }
+
+    private inner class PlayerNotificationListener :
+        PlayerNotificationManager.NotificationListener {
+        override fun onNotificationPosted(
+            notificationId: Int,
+            notification: Notification,
+            ongoing: Boolean
+        ) {
+            if (ongoing && !isForegroundService) {
+                ContextCompat.startForegroundService(
+                    applicationContext,
+                    Intent(applicationContext, this@MusicService.javaClass)
+                )
+
+                startForeground(notificationId, notification)
+                isForegroundService = true
+            }
+        }
+
+        override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
+            stopForeground(true)
+            isForegroundService = false
+            stopSelf()
         }
     }
 }

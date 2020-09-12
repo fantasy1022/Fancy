@@ -7,4 +7,9 @@
     <!-- Error messages -->
     <string name="error_media_not_found">Could not locate requested media.</string>
     <string name="generic_error">The application has encountered an unexpected error.</string>
+
+    <!-- Notification Channel -->
+    <string name="notification_channel">Now Playing</string>
+    <string name="notification_channel_description">Shows what music is currently playing in Fancy</string>
+
 </resources>
