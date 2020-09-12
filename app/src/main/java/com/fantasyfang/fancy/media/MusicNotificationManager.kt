@@ -6,6 +6,8 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
@@ -81,7 +83,10 @@ class MusicNotificationManager(
                 launch {
                     currentBitmap = iconUri?.let {
                         resolveUriAsBitmap(it)
+                    } ?: run {
+                        getDefaultBitmap(context)
                     }
+
                     currentBitmap?.let { callback.onBitmap(it) }
                 }
                 null
@@ -99,6 +104,11 @@ class MusicNotificationManager(
                     .submit(NOTIFICATION_LARGE_ICON_SIZE, NOTIFICATION_LARGE_ICON_SIZE)
                     .get()
             }
+        }
+
+        private fun getDefaultBitmap(context: Context): Bitmap? {
+            return ContextCompat.getDrawable(context, R.drawable.ic_default_cover_background)
+                ?.toBitmap()
         }
     }
 }

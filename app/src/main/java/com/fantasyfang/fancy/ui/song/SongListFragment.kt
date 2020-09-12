@@ -95,6 +95,6 @@ class SongListFragment : Fragment() {
     }
 
     private fun clickSong(song: Song) {
-        //TODO: Play song
+        songListViewModel.playMedia(song)
     }
 }

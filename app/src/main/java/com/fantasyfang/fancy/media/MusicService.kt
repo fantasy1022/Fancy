@@ -18,6 +18,7 @@ import androidx.media.MediaBrowserServiceCompat
 import com.fantasyfang.fancy.BuildConfig
 import com.fantasyfang.fancy.R
 import com.fantasyfang.fancy.di.InjectorUtils
+import com.fantasyfang.fancy.extension.id
 import com.fantasyfang.fancy.extension.toMediaMetadataCompat
 import com.fantasyfang.fancy.extension.toMediaSource
 import com.fantasyfang.fancy.repository.SongListRepository
@@ -94,6 +95,13 @@ class MusicService : MediaBrowserServiceCompat(), CoroutineScope by MainScope() 
         )
 
         notificationManager.showNotificationForPlayer(currentPlayer)
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent) {
+        //Save recent play info
+        super.onTaskRemoved(rootIntent)
+
+        currentPlayer.stop(/* reset= */true)
     }
 
     override fun onLoadChildren(
@@ -256,7 +264,10 @@ class MusicService : MediaBrowserServiceCompat(), CoroutineScope by MainScope() 
         itemToPlay: MediaMetadataCompat?, playWhenReady: Boolean,
         playbackStartPositionMs: Long
     ) {
-        val initialWindowIndex = if (itemToPlay == null) 0 else metadataList.indexOf(itemToPlay)
+        val initialWindowIndex =
+            if (itemToPlay == null) 0 else metadataList.indexOfFirst { metadata ->
+                metadata.id == itemToPlay.id
+            }
         currentPlaylistItems = metadataList
 
         currentPlayer.playWhenReady = playWhenReady
