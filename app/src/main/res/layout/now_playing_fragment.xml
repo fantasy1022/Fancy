@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -13,67 +12,9 @@
         app:behavior_peekHeight="70dp"
         app:layout_behavior="@string/bottom_sheet_behavior">
 
-        <SeekBar
-            android:id="@+id/smallSeekBar"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:thumb="@android:color/transparent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        <include layout="@layout/section_now_playing_small" />
 
-        <!--  TODO: use include   -->
-        <ImageView
-            android:id="@+id/smallCover"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginTop="5dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/smallSeekBar"
-            tools:ignore="ContentDescription"
-            tools:src="@tools:sample/avatars" />
-
-        <TextView
-            android:id="@+id/smallTitle"
-            style="@style/Song.MainText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/smallCover"
-            app:layout_constraintTop_toBottomOf="@id/smallSeekBar"
-            tools:text="@tools:sample/lorem" />
-
-        <TextView
-            android:id="@+id/smallSubTitle"
-            style="@style/Song.SecondaryText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/smallCover"
-            app:layout_constraintTop_toBottomOf="@id/smallTitle"
-            tools:text="@tools:sample/lorem" />
-
-        <ImageButton
-            android:id="@+id/playPauseImage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:layout_marginEnd="15dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/asl_playpause"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="ContentDescription"
-            tools:src="@tools:sample/us_phones" />
+        <include layout="@layout/section_now_playing_large" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

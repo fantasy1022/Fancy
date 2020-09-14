@@ -81,6 +81,14 @@ class NowPlayingViewModel(
         checkPlaybackPosition()
     }
 
+    fun skipToNextSong() {
+        musicServiceConnection.transportControls.skipToNext()
+    }
+
+    fun skipToPreviousSong() {
+        musicServiceConnection.transportControls.skipToPrevious()
+    }
+
     /**
      * Internal function that recursively calls itself every [POSITION_UPDATE_INTERVAL_MILLIS] ms
      * to check the current playback position and updates the corresponding LiveData object when it

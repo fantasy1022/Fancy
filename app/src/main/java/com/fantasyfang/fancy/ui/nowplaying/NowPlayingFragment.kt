@@ -14,9 +14,12 @@ import androidx.lifecycle.Observer
 import com.bumptech.glide.Glide
 import com.fantasyfang.fancy.R
 import com.fantasyfang.fancy.di.InjectorUtils
+import com.fantasyfang.fancy.ui.nowplaying.NowPlayingViewModel.NowPlayingMetadata.Companion.timestampToMSS
 import com.fantasyfang.fancy.ui.song.SongListViewModel
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.now_playing_fragment.*
+import kotlinx.android.synthetic.main.section_now_playing_large.*
+import kotlinx.android.synthetic.main.section_now_playing_small.*
 
 
 class NowPlayingFragment : Fragment() {
@@ -52,17 +55,31 @@ class NowPlayingFragment : Fragment() {
             Observer { mediaItem -> updateUI(view, mediaItem) })
 
         nowPlayingViewModel.mediaPlayProgress.observe(viewLifecycleOwner,
-            Observer { progress ->
-                updateProgressBar(progress)
-            })
+            Observer { progress -> updateProgressBar(progress) })
+
+        nowPlayingViewModel.mediaPosition.observe(viewLifecycleOwner,
+            Observer { position -> nowDuration.text = timestampToMSS(requireContext(), position) })
 
         nowPlayingViewModel.mediaButtonRes.observe(viewLifecycleOwner,
             Observer {
                 playPauseImage.setImageState(it, true)
+                largePlayPauseButton.setImageState(it, true)
             })
 
         playPauseImage.setOnClickListener {
             nowPlayingViewModel.mediaMetadata.value?.let { songListViewModel.playMediaId(it.id) }
+        }
+
+        largePlayPauseButton.setOnClickListener {
+            nowPlayingViewModel.mediaMetadata.value?.let { songListViewModel.playMediaId(it.id) }
+        }
+
+        largePreviousButton.setOnClickListener {
+            nowPlayingViewModel.skipToPreviousSong()
+        }
+
+        largeNextButton.setOnClickListener {
+            nowPlayingViewModel.skipToNextSong()
         }
     }
 
@@ -72,15 +89,23 @@ class NowPlayingFragment : Fragment() {
 
         bottomSheetBehavior.addBottomSheetCallback(object :
             BottomSheetBehavior.BottomSheetCallback() {
+
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
                 Log.d(TAG, "slideOffset:$slideOffset")
+                sectionNowPlayingSmall.alpha = 1 - slideOffset
             }
 
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 when (newState) {
                     BottomSheetBehavior.STATE_COLLAPSED -> Log.d(TAG, "STATE_COLLAPSED")
-                    BottomSheetBehavior.STATE_DRAGGING -> Log.d(TAG, "STATE_DRAGGING")
-                    BottomSheetBehavior.STATE_EXPANDED -> Log.d(TAG, "STATE_EXPANDED")
+                    BottomSheetBehavior.STATE_DRAGGING -> {
+                        Log.d(TAG, "STATE_DRAGGING")
+                        sectionNowPlayingSmall.visibility = View.VISIBLE
+                    }
+                    BottomSheetBehavior.STATE_EXPANDED -> {
+                        Log.d(TAG, "STATE_EXPANDED")
+                        sectionNowPlayingSmall.visibility = View.GONE
+                    }
                     BottomSheetBehavior.STATE_HIDDEN -> Log.d(TAG, "STATE_HIDDEN")
                     BottomSheetBehavior.STATE_HALF_EXPANDED -> Log.d(TAG, "STATE_HALF_EXPANDED")
                     BottomSheetBehavior.STATE_SETTLING -> Log.d(TAG, "STATE_SETTLING")
@@ -93,21 +118,34 @@ class NowPlayingFragment : Fragment() {
         if (metadata.albumArtUri == Uri.EMPTY) {
             smallCover.setImageResource(R.drawable.ic_default_cover_icon)
             smallCover.setBackgroundResource(R.drawable.ic_default_cover_background)
+            largeCover.setImageResource(R.drawable.ic_default_cover_icon)
+            largeCover.setBackgroundResource(R.drawable.ic_default_cover_background)
         } else {
             Glide.with(view)
                 .load(metadata.albumArtUri)
                 .into(smallCover)
+
+            Glide.with(view)
+                .load(metadata.albumArtUri)
+                .into(largeCover)
         }
 
         smallTitle.text = metadata.title
         smallSubTitle.text = metadata.subtitle
+
+        largeTitle.text = metadata.title
+        largeSubTitle.text = metadata.subtitle
+
+        totalDuration.text = metadata.duration
     }
 
     private fun updateProgressBar(progress: Int) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             smallSeekBar.setProgress(progress, true)
+            largeSeekBar.setProgress(progress, true)
         } else {
             smallSeekBar.progress = progress
+            largeSeekBar.progress = progress
         }
     }
 
