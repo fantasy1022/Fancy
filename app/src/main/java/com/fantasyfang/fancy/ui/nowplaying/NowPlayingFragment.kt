@@ -1,5 +1,7 @@
 package com.fantasyfang.fancy.ui.nowplaying
 
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -7,17 +9,24 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
+import com.bumptech.glide.Glide
 import com.fantasyfang.fancy.R
+import com.fantasyfang.fancy.di.InjectorUtils
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.now_playing_fragment.*
 
 
-private const val TAG = "NowPlayingFragment"
-
 class NowPlayingFragment : Fragment() {
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
 
+    private val nowPlayingViewModel: NowPlayingViewModel by viewModels {
+        InjectorUtils.provideNowPlayingViewModel(requireContext())
+    }
+
     companion object {
+        const val TAG = "NowPlayingFragment"
         fun newInstance() = NowPlayingFragment()
     }
 
@@ -31,6 +40,17 @@ class NowPlayingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setBottomSheetBehavior()
+        disableSeekInSmallSeekBar()
+
+        // Attach observers to the LiveData coming from this ViewModel
+        nowPlayingViewModel.mediaMetadata.observe(viewLifecycleOwner,
+            Observer { mediaItem -> updateUI(view, mediaItem) })
+
+        nowPlayingViewModel.mediaPlayProgress.observe(viewLifecycleOwner,
+            Observer { progress ->
+                updateProgressBar(progress)
+            })
+
     }
 
     private fun setBottomSheetBehavior() {
@@ -54,6 +74,32 @@ class NowPlayingFragment : Fragment() {
                 }
             }
         })
+    }
+
+    private fun updateUI(view: View, metadata: NowPlayingViewModel.NowPlayingMetadata) {
+        if (metadata.albumArtUri == Uri.EMPTY) {
+            smallCover.setImageResource(R.drawable.ic_default_cover_icon)
+            smallCover.setBackgroundResource(R.drawable.ic_default_cover_background)
+        } else {
+            Glide.with(view)
+                .load(metadata.albumArtUri)
+                .into(smallCover)
+        }
+
+        smallTitle.text = metadata.title
+        smallSubTitle.text = metadata.subtitle
+    }
+
+    private fun updateProgressBar(progress: Int) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            smallSeekBar.setProgress(progress, true)
+        } else {
+            smallSeekBar.progress = progress
+        }
+    }
+
+    private fun disableSeekInSmallSeekBar() {
+        smallSeekBar.setOnTouchListener { _, _ -> true }
     }
 
 }

@@ -5,6 +5,7 @@ import android.content.Context
 import com.fantasyfang.fancy.media.MusicService
 import com.fantasyfang.fancy.media.MusicServiceConnection
 import com.fantasyfang.fancy.repository.SongListRepositoryImpl
+import com.fantasyfang.fancy.ui.nowplaying.NowPlayingViewModel
 import com.fantasyfang.fancy.ui.song.SongListViewModel
 
 /**
@@ -28,6 +29,14 @@ object InjectorUtils {
         return SongListViewModel.Factory(
             contentResolver,
             provideSongListRepository(context),
+            musicServiceConnection
+        )
+    }
+
+    fun provideNowPlayingViewModel(context: Context): NowPlayingViewModel.Factory {
+        val musicServiceConnection = provideMusicServiceConnection(context)
+        return NowPlayingViewModel.Factory(
+            context,
             musicServiceConnection
         )
     }

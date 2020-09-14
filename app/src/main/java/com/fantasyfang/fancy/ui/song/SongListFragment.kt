@@ -99,8 +99,15 @@ class SongListFragment : Fragment() {
         songListViewModel.playMedia(song)
 
         with(parentFragmentManager.beginTransaction()) {
-            add(R.id.nav_host_fragment, NowPlayingFragment.newInstance())
-            commit()
+            val fragment = parentFragmentManager.findFragmentByTag(NowPlayingFragment.TAG)
+            if (fragment == null) {
+                add(
+                    R.id.nav_host_fragment,
+                    NowPlayingFragment.newInstance(),
+                    NowPlayingFragment.TAG
+                )
+                commit()
+            }
         }
 
     }
