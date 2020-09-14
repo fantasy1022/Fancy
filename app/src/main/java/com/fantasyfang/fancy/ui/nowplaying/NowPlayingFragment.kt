@@ -14,12 +14,17 @@ import androidx.lifecycle.Observer
 import com.bumptech.glide.Glide
 import com.fantasyfang.fancy.R
 import com.fantasyfang.fancy.di.InjectorUtils
+import com.fantasyfang.fancy.ui.song.SongListViewModel
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.now_playing_fragment.*
 
 
 class NowPlayingFragment : Fragment() {
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
+
+    private val songListViewModel: SongListViewModel by viewModels {
+        InjectorUtils.provideSongListViewModel(requireContext())
+    }
 
     private val nowPlayingViewModel: NowPlayingViewModel by viewModels {
         InjectorUtils.provideNowPlayingViewModel(requireContext())
@@ -51,6 +56,14 @@ class NowPlayingFragment : Fragment() {
                 updateProgressBar(progress)
             })
 
+        nowPlayingViewModel.mediaButtonRes.observe(viewLifecycleOwner,
+            Observer {
+                playPauseImage.setImageState(it, true)
+            })
+
+        playPauseImage.setOnClickListener {
+            nowPlayingViewModel.mediaMetadata.value?.let { songListViewModel.playMediaId(it.id) }
+        }
     }
 
     private fun setBottomSheetBehavior() {

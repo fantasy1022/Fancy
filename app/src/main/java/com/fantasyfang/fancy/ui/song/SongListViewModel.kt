@@ -61,6 +61,28 @@ class SongListViewModel(
         }
     }
 
+    fun playMediaId(mediaId: String) {
+        val nowPlaying = musicServiceConnection.nowPlaying.value
+        val transportControls = musicServiceConnection.transportControls
+
+        val isPrepared = musicServiceConnection.playbackState.value?.isPrepared ?: false
+        if (isPrepared && mediaId == nowPlaying?.id) {
+            musicServiceConnection.playbackState.value?.let { playbackState ->
+                when {
+                    playbackState.isPlaying -> transportControls.pause()
+                    playbackState.isPlayEnabled -> transportControls.play()
+                    else -> {
+                        Log.w(
+                            TAG, "Playable item clicked but neither play nor pause are enabled!" +
+                                    " (mediaId=$mediaId)"
+                        )
+                    }
+                }
+            }
+        } else {
+            transportControls.playFromMediaId(mediaId, null)
+        }
+    }
 
     private suspend fun querySongs(): List<Song> =
         songListRepository.getSongs()

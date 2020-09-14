@@ -58,8 +58,10 @@ class NowPlayingViewModel(
         postValue(0)
     }
 
+    val mediaButtonRes = MutableLiveData<IntArray>()
+
     private var updatePosition = true
-    var mediaDuration = 0L
+    private var mediaDuration = 0L
     private val handler = Handler(Looper.getMainLooper())
 
     private val playbackStateObserver = Observer<PlaybackStateCompat> {
@@ -114,6 +116,13 @@ class NowPlayingViewModel(
             )
             this.mediaMetadata.postValue(nowPlayingMetadata)
         }
+
+        mediaButtonRes.postValue(
+            when (playbackState.isPlaying) {
+                true -> intArrayOf(-R.attr.state_play, R.attr.state_pause) //Set pause
+                else -> intArrayOf(R.attr.state_play, -R.attr.state_pause) //Set play
+            }
+        )
     }
 
     override fun onCleared() {
