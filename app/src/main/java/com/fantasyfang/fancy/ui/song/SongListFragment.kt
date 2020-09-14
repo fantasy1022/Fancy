@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.fantasyfang.fancy.R
 import com.fantasyfang.fancy.data.Song
 import com.fantasyfang.fancy.di.InjectorUtils
+import com.fantasyfang.fancy.ui.nowplaying.NowPlayingFragment
 import kotlinx.android.synthetic.main.fragment_song_list.*
 
 private const val READ_EXTERNAL_STORAGE_REQUEST = 1
@@ -96,5 +97,11 @@ class SongListFragment : Fragment() {
 
     private fun clickSong(song: Song) {
         songListViewModel.playMedia(song)
+
+        with(parentFragmentManager.beginTransaction()) {
+            add(R.id.nav_host_fragment, NowPlayingFragment.newInstance())
+            commit()
+        }
+
     }
 }
