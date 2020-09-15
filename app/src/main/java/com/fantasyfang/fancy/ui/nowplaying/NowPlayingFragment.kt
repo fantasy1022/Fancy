@@ -1,5 +1,8 @@
 package com.fantasyfang.fancy.ui.nowplaying
 
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -8,10 +11,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.palette.graphics.Palette
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.fantasyfang.fancy.R
 import com.fantasyfang.fancy.di.InjectorUtils
 import com.fantasyfang.fancy.ui.nowplaying.NowPlayingViewModel.NowPlayingMetadata.Companion.timestampToMSS
@@ -120,14 +128,48 @@ class NowPlayingFragment : Fragment() {
             smallCover.setBackgroundResource(R.drawable.ic_default_cover_background)
             largeCover.setImageResource(R.drawable.ic_default_cover_icon)
             largeCover.setBackgroundResource(R.drawable.ic_default_cover_background)
+
+            titleBackground.setBackgroundColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.colorPrimary
+                )
+            )
+
+            largeTitle.setTextColor(Color.WHITE)
+            largeSubTitle.setTextColor(Color.WHITE)
+
         } else {
             Glide.with(view)
                 .load(metadata.albumArtUri)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(smallCover)
 
             Glide.with(view)
                 .load(metadata.albumArtUri)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(largeCover)
+
+            Glide.with(view)
+                .asBitmap()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .load(metadata.albumArtUri)
+                .into(object : CustomTarget<Bitmap>() {
+                    override fun onLoadCleared(placeholder: Drawable?) {
+                        //Nothing
+                    }
+
+                    override fun onResourceReady(
+                        resource: Bitmap,
+                        transition: Transition<in Bitmap>?
+                    ) {
+                        Palette.from(resource).generate { palette ->
+                            if (palette == null) return@generate
+                            setTitleColor(palette)
+                        }
+                    }
+                })
+
         }
 
         smallTitle.text = metadata.title
@@ -152,5 +194,26 @@ class NowPlayingFragment : Fragment() {
     private fun disableSeekInSmallSeekBar() {
         smallSeekBar.setOnTouchListener { _, _ -> true }
     }
+
+    private fun setTitleColor(palette: Palette) {
+        val bodyColor: Int = palette.getDominantColor(
+            ContextCompat.getColor(requireContext(), android.R.color.black)
+        )
+
+        val titleTextColor =
+            palette.getLightVibrantColor(
+                ContextCompat.getColor(requireContext(), android.R.color.white)
+            )
+
+        val bodyTextColor =
+            palette.getLightMutedColor(
+                ContextCompat.getColor(requireContext(), android.R.color.white)
+            )
+
+        titleBackground.setBackgroundColor(bodyColor)
+        largeTitle.setTextColor(titleTextColor)
+        largeSubTitle.setTextColor(bodyTextColor)
+    }
+
 
 }

@@ -9,12 +9,22 @@
         android:id="@+id/largeCover"
         android:layout_width="250dp"
         android:layout_height="250dp"
-        android:layout_marginTop="90dp"
+        android:layout_marginTop="70dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="ContentDescription"
         tools:src="@tools:sample/avatars" />
+
+    <View
+        android:id="@+id/titleBackground"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@color/colorPrimary"
+        app:layout_constraintBottom_toBottomOf="@id/largeSubTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/largeTitle" />
 
     <TextView
         android:id="@+id/largeTitle"
@@ -22,7 +32,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="30dp"
         android:layout_marginEnd="16dp"
         android:gravity="center"
         android:textSize="20sp"
