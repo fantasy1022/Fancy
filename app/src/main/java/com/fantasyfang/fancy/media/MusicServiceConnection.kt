@@ -2,17 +2,23 @@ package com.fantasyfang.fancy.media
 
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
+import com.fantasyfang.fancy.extension.displayIconUri
+import com.fantasyfang.fancy.extension.displaySubtitle
 import com.fantasyfang.fancy.extension.id
+import com.fantasyfang.fancy.extension.title
+import com.fantasyfang.fancy.widget.MusicAppWidget
+import com.fantasyfang.fancy.widget.WidgetConstants
 
 private const val TAG = "MusicServiceConnection"
 
-class MusicServiceConnection(context: Context, serviceComponent: ComponentName) {
+class MusicServiceConnection(val context: Context, serviceComponent: ComponentName) {
     val isConnected = MutableLiveData<Boolean>()
         .apply { postValue(false) }
     val playbackState = MutableLiveData<PlaybackStateCompat>()
@@ -78,10 +84,22 @@ class MusicServiceConnection(context: Context, serviceComponent: ComponentName) 
                 if (metadata?.id == null) {
                     NOTHING_PLAYING
                 } else {
+                    sendWidgetIntent(metadata)
                     metadata
                 }
             )
         }
+    }
+
+    private fun sendWidgetIntent(metadata: MediaMetadataCompat) {
+        val intent = Intent(context, MusicAppWidget::class.java).apply {
+            action = WidgetConstants.METADATA_CHANGED
+            putExtra(WidgetConstants.ARGUMENT_SONG_ID, metadata.id)
+            putExtra(WidgetConstants.ARGUMENT_TITLE, metadata.title)
+            putExtra(WidgetConstants.ARGUMENT_SUBTITLE, metadata.displaySubtitle)
+            putExtra(WidgetConstants.ARGUMENT_COVER_URI, metadata.displayIconUri.toString())
+        }
+        context.sendBroadcast(intent)
     }
 
     companion object {

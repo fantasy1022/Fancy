@@ -3,6 +3,5 @@
     android:initialLayout="@layout/music_app_widget"
     android:minWidth="240dp"
     android:minHeight="30dp"
-    android:previewImage="@drawable/example_appwidget_preview"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen" />
