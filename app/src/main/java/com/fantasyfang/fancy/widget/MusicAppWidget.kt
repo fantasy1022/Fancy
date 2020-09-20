@@ -1,5 +1,6 @@
 package com.fantasyfang.fancy.widget
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
@@ -15,7 +16,10 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import com.fantasyfang.fancy.MainActivity
 import com.fantasyfang.fancy.R
+import com.fantasyfang.fancy.extension.asServicePendingIntent
+import com.fantasyfang.fancy.media.MusicService
 
 
 private const val TAG = "MusicAppWidget"
@@ -40,6 +44,13 @@ class MusicAppWidget : AppWidgetProvider() {
             appWidgetManager.getAppWidgetIds(ComponentName(context, MusicAppWidget::class.java))
 
         when (intent.action) {
+            WidgetConstants.STATE_CHANGED -> {
+                val isPlaying = intent.getBooleanExtra(WidgetConstants.ARGUMENT_IS_PLAYING, false)
+                for (appWidgetId in appWidgetIds) {
+                    stateChanged(context, isPlaying, appWidgetManager, appWidgetId)
+                }
+            }
+
             WidgetConstants.METADATA_CHANGED -> {
                 val id = intent.getLongExtra(WidgetConstants.ARGUMENT_SONG_ID, 0)
                 val title = intent.getStringExtra(WidgetConstants.ARGUMENT_TITLE)!!
@@ -53,6 +64,21 @@ class MusicAppWidget : AppWidgetProvider() {
         }
     }
 
+    private fun stateChanged(
+        context: Context,
+        isPlaying: Boolean,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int
+    ) {
+        val views = RemoteViews(context.packageName, R.layout.music_app_widget)
+        if (isPlaying) {
+            views.setImageViewResource(R.id.play, R.drawable.vd_pause)
+        } else {
+            views.setImageViewResource(R.id.play, R.drawable.vd_play)
+        }
+        appWidgetManager.updateAppWidget(appWidgetId, views)
+    }
+
     private fun metaChanged(
         context: Context,
         widgetMetadata: WidgetMetadata,
@@ -62,6 +88,8 @@ class MusicAppWidget : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.music_app_widget)
         views.setTextViewText(R.id.title, widgetMetadata.title)
         views.setTextViewText(R.id.subtitle, widgetMetadata.subtitle)
+
+        setPendingIntent(views, context)
 
         Glide.with(context)
             .asBitmap()
@@ -127,10 +155,43 @@ class MusicAppWidget : AppWidgetProvider() {
             })
     }
 
+    private fun setPendingIntent(remoteViews: RemoteViews, context: Context) {
+        remoteViews.setOnClickPendingIntent(
+            R.id.previous,
+            buildPendingIntent(context, WidgetConstants.WidgetAction.SKIP_PREVIOUS.name)
+        )
+
+        remoteViews.setOnClickPendingIntent(
+            R.id.play,
+            buildPendingIntent(context, WidgetConstants.WidgetAction.PLAY_PAUSE.name)
+        )
+
+        remoteViews.setOnClickPendingIntent(
+            R.id.next,
+            buildPendingIntent(context, WidgetConstants.WidgetAction.SKIP_NEXT.name)
+        )
+
+        remoteViews.setOnClickPendingIntent(R.id.cover, buildContentIntent(context))
+    }
+
     private fun setMediaButtonColors(remoteViews: RemoteViews, color: Int) {
         remoteViews.setInt(R.id.previous, "setColorFilter", color)
         remoteViews.setInt(R.id.play, "setColorFilter", color)
         remoteViews.setInt(R.id.next, "setColorFilter", color)
+    }
+
+    private fun buildPendingIntent(context: Context, action: String): PendingIntent? {
+        val intent = Intent(context, MusicService::class.java)
+        intent.action = action
+        return intent.asServicePendingIntent(context, PendingIntent.FLAG_UPDATE_CURRENT)
+    }
+
+    private fun buildContentIntent(context: Context): PendingIntent {
+        val intent = Intent(context, MainActivity::class.java)
+        return PendingIntent.getActivity(
+            context, 0,
+            intent, PendingIntent.FLAG_UPDATE_CURRENT
+        )
     }
 }
 

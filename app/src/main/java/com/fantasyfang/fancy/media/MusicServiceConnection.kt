@@ -9,10 +9,7 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
-import com.fantasyfang.fancy.extension.displayIconUri
-import com.fantasyfang.fancy.extension.displaySubtitle
-import com.fantasyfang.fancy.extension.id
-import com.fantasyfang.fancy.extension.title
+import com.fantasyfang.fancy.extension.*
 import com.fantasyfang.fancy.widget.MusicAppWidget
 import com.fantasyfang.fancy.widget.WidgetConstants
 
@@ -75,7 +72,9 @@ class MusicServiceConnection(val context: Context, serviceComponent: ComponentNa
 
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             Log.d(TAG, "MediaControllerCallback onPlaybackStateChanged:$state")
+            val playbackStateCompat = state ?: EMPTY_PLAYBACK_STATE
             playbackState.postValue(state ?: EMPTY_PLAYBACK_STATE)
+            sendWidgetPlaybackStateIntent(playbackStateCompat)
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
@@ -84,14 +83,22 @@ class MusicServiceConnection(val context: Context, serviceComponent: ComponentNa
                 if (metadata?.id == null) {
                     NOTHING_PLAYING
                 } else {
-                    sendWidgetIntent(metadata)
+                    sendWidgetMetadataIntent(metadata)
                     metadata
                 }
             )
         }
     }
 
-    private fun sendWidgetIntent(metadata: MediaMetadataCompat) {
+    private fun sendWidgetPlaybackStateIntent(playbackStateCompat: PlaybackStateCompat) {
+        val intent = Intent(context, MusicAppWidget::class.java).apply {
+            action = WidgetConstants.STATE_CHANGED
+            putExtra(WidgetConstants.ARGUMENT_IS_PLAYING, playbackStateCompat.isPlaying)
+        }
+        context.sendBroadcast(intent)
+    }
+
+    private fun sendWidgetMetadataIntent(metadata: MediaMetadataCompat) {
         val intent = Intent(context, MusicAppWidget::class.java).apply {
             action = WidgetConstants.METADATA_CHANGED
             putExtra(WidgetConstants.ARGUMENT_SONG_ID, metadata.id)

@@ -2,6 +2,7 @@ package com.fantasyfang.fancy.media
 
 import android.app.Notification
 import android.app.PendingIntent
+import android.app.Service
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -19,9 +20,11 @@ import com.fantasyfang.fancy.BuildConfig
 import com.fantasyfang.fancy.R
 import com.fantasyfang.fancy.di.InjectorUtils
 import com.fantasyfang.fancy.extension.id
+import com.fantasyfang.fancy.extension.isPlaying
 import com.fantasyfang.fancy.extension.toMediaMetadataCompat
 import com.fantasyfang.fancy.extension.toMediaSource
 import com.fantasyfang.fancy.repository.SongListRepository
+import com.fantasyfang.fancy.widget.WidgetConstants
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
@@ -95,6 +98,37 @@ class MusicService : MediaBrowserServiceCompat(), CoroutineScope by MainScope() 
         )
 
         notificationManager.showNotificationForPlayer(currentPlayer)
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        handleIntent(intent)
+        return Service.START_NOT_STICKY
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        intent ?: return
+
+        when (WidgetConstants.WidgetAction.values().find { it.name == intent.action }) {
+            WidgetConstants.WidgetAction.PLAY_PAUSE -> handlePlayPause()
+            WidgetConstants.WidgetAction.SKIP_NEXT -> handleSkipNext()
+            WidgetConstants.WidgetAction.SKIP_PREVIOUS -> handleSkipPrevious()
+        }
+    }
+
+    private fun handlePlayPause() {
+        if (mediaSession.controller.playbackState.isPlaying) {
+            mediaSession.controller.transportControls.pause()
+        } else {
+            mediaSession.controller.transportControls.play()
+        }
+    }
+
+    private fun handleSkipNext() {
+        mediaSession.controller.transportControls.skipToNext()
+    }
+
+    private fun handleSkipPrevious() {
+        mediaSession.controller.transportControls.skipToPrevious()
     }
 
     override fun onTaskRemoved(rootIntent: Intent) {
