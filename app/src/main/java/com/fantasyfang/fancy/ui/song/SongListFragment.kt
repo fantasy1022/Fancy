@@ -3,6 +3,7 @@ package com.fantasyfang.fancy.ui.song
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -67,6 +68,12 @@ class SongListFragment : Fragment() {
         }
     }
 
+    fun playSongDirectly() {
+        Handler().postDelayed({
+            clickSong(songListViewModel.songs.value?.getOrNull(0) ?: return@postDelayed)
+        }, 2000)
+    }
+
     private fun haveStoragePermission() =
         ContextCompat.checkSelfPermission(
             requireContext(),
@@ -97,7 +104,10 @@ class SongListFragment : Fragment() {
 
     private fun clickSong(song: Song) {
         songListViewModel.playMedia(song)
+        showNowPlaying()
+    }
 
+    private fun showNowPlaying() {
         with(parentFragmentManager.beginTransaction()) {
             val fragment = parentFragmentManager.findFragmentByTag(NowPlayingFragment.TAG)
             if (fragment == null) {
@@ -109,6 +119,5 @@ class SongListFragment : Fragment() {
                 commit()
             }
         }
-
     }
 }

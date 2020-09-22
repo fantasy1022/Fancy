@@ -1,0 +1,17 @@
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_default_cover_icon"
+        android:shortcutDisabledMessage="@string/shortcut_play_error"
+        android:shortcutId="compose"
+        android:shortcutLongLabel="@string/shortcut_play_long_label"
+        android:shortcutShortLabel="@string/shortcut_play_short_label">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="com.fantasyfang.fancy.MainActivity"
+            android:targetPackage="com.fantasyfang.fancy">
+            <categories android:name="android.shortcut.play.song" />
+        </intent>
+    </shortcut>
+
+</shortcuts>

@@ -17,4 +17,11 @@
     <string name="appwidget_text">EXAMPLE</string>
     <string name="add_widget">Add widget</string>
 
+    <!--  Shortcut  -->
+    <string name="shortcut_play_short_label">Play</string>
+    <string name="shortcut_play_long_label">Play song!</string>
+    <string name="shortcut_play_error">Play error!</string>
+    <string name="shortcut_play_category">android.shortcut.play.song</string>
+
+
 </resources>
