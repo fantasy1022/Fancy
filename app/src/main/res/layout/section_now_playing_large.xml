@@ -88,6 +88,18 @@
         tools:text="05:00" />
 
     <ImageButton
+        android:id="@+id/shuffleButton"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="20dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_shuffle"
+        app:layout_constraintEnd_toStartOf="@id/largePreviousButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/nowDuration"
+        tools:ignore="ContentDescription" />
+
+    <ImageButton
         android:id="@+id/largePreviousButton"
         android:layout_width="60dp"
         android:layout_height="60dp"
@@ -95,7 +107,7 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@drawable/ic_skip_previous"
         app:layout_constraintEnd_toStartOf="@id/largePlayPauseButton"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/shuffleButton"
         app:layout_constraintTop_toBottomOf="@id/nowDuration"
         tools:ignore="ContentDescription" />
 
@@ -119,8 +131,20 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="0dp"
         android:src="@drawable/ic_skip_next"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/repeatButton"
         app:layout_constraintStart_toEndOf="@id/largePlayPauseButton"
+        app:layout_constraintTop_toBottomOf="@id/nowDuration"
+        tools:ignore="ContentDescription" />
+
+    <ImageButton
+        android:id="@+id/repeatButton"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="20dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_repeat"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/largeNextButton"
         app:layout_constraintTop_toBottomOf="@id/nowDuration"
         tools:ignore="ContentDescription" />
 

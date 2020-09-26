@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -74,6 +75,54 @@ class NowPlayingFragment : Fragment() {
                 largePlayPauseButton.setImageState(it, true)
             })
 
+        nowPlayingViewModel.shuffleMode.observe(viewLifecycleOwner,
+            Observer {
+                when (it) {
+                    PlaybackStateCompat.SHUFFLE_MODE_NONE -> {
+                        shuffleButton.setColorFilter(Color.BLACK)
+                    }
+                    PlaybackStateCompat.SHUFFLE_MODE_ALL -> {
+                        shuffleButton.setColorFilter(
+                            ContextCompat.getColor(
+                                requireContext(),
+                                R.color.colorPrimary
+                            )
+                        )
+                    }
+                }
+            }
+        )
+
+        nowPlayingViewModel.repeatMode.observe(viewLifecycleOwner,
+            Observer {
+                when (it) {
+                    PlaybackStateCompat.REPEAT_MODE_NONE -> {
+                        repeatButton.setImageResource(R.drawable.ic_repeat)
+                        repeatButton.setColorFilter(Color.BLACK)
+                    }
+                    PlaybackStateCompat.REPEAT_MODE_ONE -> {
+                        repeatButton.setImageResource(R.drawable.ic_repeat_one)
+                        repeatButton.setColorFilter(
+                            ContextCompat.getColor(
+                                requireContext(),
+                                R.color.colorPrimary
+                            )
+                        )
+                    }
+                    PlaybackStateCompat.REPEAT_MODE_ALL -> {
+                        repeatButton.setImageResource(R.drawable.ic_repeat)
+                        repeatButton.setColorFilter(
+                            ContextCompat.getColor(
+                                requireContext(),
+                                R.color.colorPrimary
+                            )
+                        )
+                    }
+                }
+            }
+        )
+
+
         playPauseImage.setOnClickListener {
             nowPlayingViewModel.mediaMetadata.value?.let { songListViewModel.playMediaId(it.id) }
         }
@@ -88,6 +137,14 @@ class NowPlayingFragment : Fragment() {
 
         largeNextButton.setOnClickListener {
             nowPlayingViewModel.skipToNextSong()
+        }
+
+        shuffleButton.setOnClickListener {
+            nowPlayingViewModel.changeShuffleMode()
+        }
+
+        repeatButton.setOnClickListener {
+            nowPlayingViewModel.changeRepeatMode()
         }
     }
 

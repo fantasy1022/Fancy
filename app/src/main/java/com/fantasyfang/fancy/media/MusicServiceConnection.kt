@@ -22,8 +22,12 @@ class MusicServiceConnection(val context: Context, serviceComponent: ComponentNa
         .apply { postValue(EMPTY_PLAYBACK_STATE) }
     val nowPlaying = MutableLiveData<MediaMetadataCompat>()
         .apply { postValue(NOTHING_PLAYING) }
+    val shuffleModeState = MutableLiveData<Int>()
+        .apply { postValue(PlaybackStateCompat.SHUFFLE_MODE_NONE) }
+    val repeatModeState = MutableLiveData<Int>()
+        .apply { postValue(PlaybackStateCompat.REPEAT_MODE_NONE) }
 
-    private lateinit var mediaController: MediaControllerCompat
+    lateinit var mediaController: MediaControllerCompat
     val transportControls: MediaControllerCompat.TransportControls
         get() = mediaController.transportControls
 
@@ -87,6 +91,18 @@ class MusicServiceConnection(val context: Context, serviceComponent: ComponentNa
                     metadata
                 }
             )
+        }
+
+        override fun onShuffleModeChanged(shuffleMode: Int) {
+            super.onShuffleModeChanged(shuffleMode)
+            Log.d(TAG, "MediaControllerCallback onShuffleModeChanged:$shuffleMode")
+            shuffleModeState.postValue(shuffleMode)
+        }
+
+        override fun onRepeatModeChanged(repeatMode: Int) {
+            super.onRepeatModeChanged(repeatMode)
+            Log.d(TAG, "MediaControllerCallback onRepeatModeChanged:$repeatMode")
+            repeatModeState.postValue(repeatMode)
         }
     }
 

@@ -59,10 +59,20 @@ class NowPlayingViewModel(
     }
 
     val mediaButtonRes = MutableLiveData<IntArray>()
+    val shuffleMode = MutableLiveData<Int>()
+    val repeatMode = MutableLiveData<Int>()
 
     private var updatePosition = true
     private var mediaDuration = 0L
     private val handler = Handler(Looper.getMainLooper())
+    private val shuffleModeChoices =
+        listOf(PlaybackStateCompat.SHUFFLE_MODE_NONE, PlaybackStateCompat.SHUFFLE_MODE_ALL)
+    private val repeatModeChoices =
+        listOf(
+            PlaybackStateCompat.REPEAT_MODE_NONE,
+            PlaybackStateCompat.REPEAT_MODE_ONE,
+            PlaybackStateCompat.REPEAT_MODE_ALL
+        )
 
     private val playbackStateObserver = Observer<PlaybackStateCompat> {
         playbackState = it ?: EMPTY_PLAYBACK_STATE
@@ -75,9 +85,19 @@ class NowPlayingViewModel(
         mediaDuration = it.duration
     }
 
+    private val shuffleModeObserver = Observer<Int> {
+        shuffleMode.postValue(it)
+    }
+
+    private val repeatModeObserver = Observer<Int> {
+        repeatMode.postValue(it)
+    }
+
     private val musicServiceConnection = musicServiceConnection.also {
         it.playbackState.observeForever(playbackStateObserver)
         it.nowPlaying.observeForever(mediaMetadataObserver)
+        it.shuffleModeState.observeForever(shuffleModeObserver)
+        it.repeatModeState.observeForever(repeatModeObserver)
         checkPlaybackPosition()
     }
 
@@ -87,6 +107,31 @@ class NowPlayingViewModel(
 
     fun skipToPreviousSong() {
         musicServiceConnection.transportControls.skipToPrevious()
+    }
+
+    fun changeShuffleMode() {
+        val nowShuffleMode =
+            shuffleModeChoices.indexOf(musicServiceConnection.mediaController.shuffleMode)
+        val targetShuffleMode = when (nowShuffleMode) {
+            PlaybackStateCompat.SHUFFLE_MODE_NONE -> PlaybackStateCompat.SHUFFLE_MODE_ALL
+            PlaybackStateCompat.SHUFFLE_MODE_ALL -> PlaybackStateCompat.SHUFFLE_MODE_NONE
+            else -> PlaybackStateCompat.SHUFFLE_MODE_ALL
+        }
+
+        musicServiceConnection.transportControls.setShuffleMode(targetShuffleMode)
+    }
+
+    fun changeRepeatMode() {
+        val nowRepeatMode =
+            repeatModeChoices.indexOf(musicServiceConnection.mediaController.repeatMode)
+        val targetRepeatMode = when (nowRepeatMode) {
+            PlaybackStateCompat.REPEAT_MODE_NONE -> PlaybackStateCompat.REPEAT_MODE_ONE
+            PlaybackStateCompat.REPEAT_MODE_ONE -> PlaybackStateCompat.REPEAT_MODE_ALL
+            PlaybackStateCompat.REPEAT_MODE_ALL -> PlaybackStateCompat.REPEAT_MODE_NONE
+            else -> PlaybackStateCompat.REPEAT_MODE_ALL
+        }
+
+        musicServiceConnection.transportControls.setRepeatMode(targetRepeatMode)
     }
 
     /**
